@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.leaflet-container {
+    height: 100%;
+}
+
+.leaflet-control-container .leaflet-routing-container-hide {
+    display: none;
+}
+
+.cluster-icon {
+    background-color: #8abd60;
+    height: 2em;
+    width: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    box-shadow: 0 0 0px 5px #8ca672;
+}
+
+.leaflet-control-attribution {
+    display: none;
+}
+
+.ant-tabs-nav {
+    width: 100% !important;
+}
+
+.ant-tabs-tab {
+    display: block;
+    flex: 1;
+    justify-content: center;
+}
+
+.ant-tabs-nav > div:nth-of-type(1) {
+    display: unset !important;
+    width: 100% !important;
+}
