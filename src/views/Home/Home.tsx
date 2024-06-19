@@ -1,12 +1,12 @@
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import MapWrapper from '../../components/MapWrapper/MapWrapper';
 import { Car } from '../../components/Car';
-import { Car as TypeCar } from '../../types';
+import { Region, Car as TypeCar } from '../../types';
 import { useEffect, useState } from 'react';
 import { getListVehicles } from '../../services/carService';
 import { createClusterCustomIcon } from '../../utils';
 import { io } from 'socket.io-client';
-import { Button, Drawer, Modal, Space, Tabs, TabsProps, Tooltip } from 'antd';
+import { Button, Drawer, Modal, Space, Tabs, Tooltip } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faExpand,
@@ -24,30 +24,30 @@ import { ListRegion } from '../../components/ListRegion';
 import { Warning } from '../../components/Warning';
 import { Form } from '../../components/FormAddRegion';
 import { GeoAreaIcon } from '../../icons';
-
-const items: TabsProps['items'] = [
-    {
-        key: '1',
-        label: 'Danh sách vùng',
-        children: <ListRegion />,
-    },
-    {
-        key: '2',
-        label: 'Cảnh báo',
-        children: <Warning />,
-    },
-];
+import { getRegion } from '../../services';
 
 const Home: React.FC = () => {
     const [markers, setMarkers] = useState<TypeCar[]>([]);
     const [openPolygon, setOpenPolygon] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [regions, setRegions] = useState<Region[]>([]);
+    const [disabled, setDisabled] = useState(true);
+    const [newRegion, setNewRegion] = useState<Region>();
 
     const showModal = () => {
         setIsModalOpen(true);
     };
 
+    const handleReload = async () => {
+        try {
+            const [region] = await Promise.all([getRegion()]);
+            setRegions(region);
+        } catch (error) {}
+    };
+
     const handleOk = () => {
+        console.log(newRegion);
+
         setIsModalOpen(false);
     };
 
@@ -63,9 +63,9 @@ const Home: React.FC = () => {
         setOpenPolygon(false);
     };
 
-    const onChange = (key: string) => {
-        console.log(key);
-    };
+    // const onChange = (key: string) => {
+    //     console.log(key);
+    // };
 
     useEffect(() => {
         const socket = io('https://checkapp.midvietnam.com', {
@@ -73,7 +73,7 @@ const Home: React.FC = () => {
                 polling: {
                     extraHeaders: {
                         'X-Mobicam-Token':
-                            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjQ1LCJhcHAiOiJtaWR2biIsImxldmVsIjowLCJjb21JRCI6LTEsImlhdCI6MTcxODY4NDI3OSwiZXhwIjoxNzE4OTQzNDc5fQ.MgG14LCLKMGWSuK0xfrFZXEvRW7JXpXE6Px7jpkYMnM',
+                            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Mjg4MSwiYXBwIjoibWlkdm4iLCJsZXZlbCI6MCwiY29tSUQiOi0xLCJpYXQiOjE3MTg3NzczMTEsImV4cCI6MTcxOTAzNjUxMX0.p10zlGeUX1LdpzD8IIN1I7ribSdjFHaTRZ8lhj7ZGok',
                     },
                 },
             },
@@ -94,8 +94,14 @@ const Home: React.FC = () => {
 
     useEffect(() => {
         const fetch = async () => {
-            const res = await getListVehicles();
-            setMarkers(res?.data);
+            try {
+                const [res, regionRes] = await Promise.all([
+                    getListVehicles(),
+                    getRegion(),
+                ]);
+                setRegions(regionRes);
+                setMarkers(res?.data);
+            } catch (error) {}
         };
 
         fetch();
@@ -187,7 +193,27 @@ const Home: React.FC = () => {
                     </Space>
                 }
             >
-                <Tabs defaultActiveKey="1" items={items} onChange={onChange} />
+                <Tabs
+                    defaultActiveKey="1"
+                    items={[
+                        {
+                            key: '1',
+                            label: 'Danh sách vùng',
+                            children: (
+                                <ListRegion
+                                    regions={regions}
+                                    reload={handleReload}
+                                />
+                            ),
+                        },
+                        {
+                            key: '2',
+                            label: 'Cảnh báo',
+                            children: <Warning />,
+                        },
+                    ]}
+                    // onChange={onChange}
+                />
             </Drawer>
             <Modal
                 centered
@@ -197,10 +223,14 @@ const Home: React.FC = () => {
                 onCancel={handleCancel}
                 okText="Thêm"
                 cancelText="Hủy"
-                okButtonProps={{ icon: <SaveOutlined />, disabled: true }}
+                okButtonProps={{ icon: <SaveOutlined />, disabled: disabled }}
                 width={1200}
             >
-                <Form markers={markers} />
+                <Form
+                    markers={markers}
+                    setDisable={setDisabled}
+                    setNewRegion={setNewRegion}
+                />
             </Modal>
         </div>
     );

@@ -10,7 +10,7 @@ import {
 import MapWrapper from '../MapWrapper/MapWrapper';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { Car } from '../Car';
-import { Car as TypeCar } from '../../types';
+import { Region, Car as TypeCar } from '../../types';
 import { createClusterCustomIcon } from '../../utils';
 import TextArea from 'antd/es/input/TextArea';
 import { FeatureGroup } from 'react-leaflet';
@@ -21,18 +21,43 @@ import { getListVehicles } from '../../services/carService';
 
 type FormType = {
     markers: TypeCar[];
+    setDisable: React.Dispatch<React.SetStateAction<boolean>>;
+    setNewRegion: React.Dispatch<React.SetStateAction<Region | undefined>>;
 };
 
 const { SHOW_CHILD } = TreeSelect;
 
-const FormAddRegion: React.FC<FormType> = ({ markers }) => {
+const FormAddRegion: React.FC<FormType> = ({
+    markers,
+    setDisable,
+    setNewRegion,
+}) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [showVehicle, setShowVehicle] = useState(true);
     const [listVehicles, setListVehicles] = useState<TypeCar[]>();
+    const [name, setName] = useState<string>('');
+    const [layer, setLayer] = useState<{ type: string; bounds: number[][] }>();
 
     const handleShowVehicle = (checked: boolean) => {
         setShowVehicle(checked);
     };
+
+    useEffect(() => {
+        setDisable(!(name !== '' && layer));
+        if (layer) {
+            setNewRegion({
+                type: layer.type,
+                bounds: layer.bounds,
+                // color?: string;
+                name: name,
+                isInWarning: 1,
+                isOutWarning: 1,
+                // vehicles?: string[];
+                // note?: string;
+                isDelete: false,
+            });
+        }
+    }, [name, layer]);
 
     const handleCreated = (e: any) => {
         const layerType = e.layerType;
@@ -42,8 +67,7 @@ const FormAddRegion: React.FC<FormType> = ({ markers }) => {
             const latlngs = layer._latlngs[0].map(
                 (item: { lat: number; lng: number }) => [item.lat, item.lng],
             );
-            console.log('Layer type:', layerType);
-            console.log('Layer:', latlngs);
+            setLayer({ type: layerType, bounds: latlngs });
         } else {
             console.log('Layer does not have _latlngs property');
         }
@@ -87,7 +111,10 @@ const FormAddRegion: React.FC<FormType> = ({ markers }) => {
                                     },
                                 ]}
                             >
-                                <Input />
+                                <Input
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
                             </Form.Item>
                             <Form.Item label="Màu nền">
                                 <ColorPicker
@@ -106,10 +133,10 @@ const FormAddRegion: React.FC<FormType> = ({ markers }) => {
                                             value: '0-0',
                                             key: '0-0',
                                             children: listVehicles?.map(
-                                                (v, index) => ({
+                                                (v) => ({
                                                     title: `${v.name_Vid} (${v.name_Vid}) (${v.key})`,
                                                     value: `${v.name_Vid}|${v.devId}`,
-                                                    key: `0-0-${index}`,
+                                                    key: `${v.name_Vid}|${v.devId}`,
                                                 }),
                                             ),
                                         },

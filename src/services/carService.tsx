@@ -8,7 +8,7 @@ export const getListVehicles = async () => {
             {
                 headers: {
                     'X-Mobicam-Token':
-                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjQ1LCJhcHAiOiJtaWR2biIsImxldmVsIjowLCJjb21JRCI6LTEsImlhdCI6MTcxODY4NDI3OSwiZXhwIjoxNzE4OTQzNDc5fQ.MgG14LCLKMGWSuK0xfrFZXEvRW7JXpXE6Px7jpkYMnM',
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Mjg4MSwiYXBwIjoibWlkdm4iLCJsZXZlbCI6MCwiY29tSUQiOi0xLCJpYXQiOjE3MTg3NzczMTEsImV4cCI6MTcxOTAzNjUxMX0.p10zlGeUX1LdpzD8IIN1I7ribSdjFHaTRZ8lhj7ZGok',
                 },
             },
         );
