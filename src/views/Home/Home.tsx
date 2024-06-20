@@ -1,12 +1,12 @@
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import MapWrapper from '../../components/MapWrapper/MapWrapper';
 import { Car } from '../../components/Car';
-import { Region, Car as TypeCar } from '../../types';
+import { Record, Region, Car as TypeCar } from '../../types';
 import { useEffect, useState } from 'react';
 import { getListVehicles } from '../../services/carService';
 import { createClusterCustomIcon } from '../../utils';
 import { io } from 'socket.io-client';
-import { Button, Drawer, Modal, Space, Tabs, Tooltip } from 'antd';
+import { Button, Drawer, Modal, Space, Tabs, Tooltip, message } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faExpand,
@@ -15,6 +15,7 @@ import {
     faPlus,
 } from '@fortawesome/free-solid-svg-icons';
 import {
+    CloseOutlined,
     PlusOutlined,
     ReloadOutlined,
     SaveOutlined,
@@ -24,7 +25,7 @@ import { ListRegion } from '../../components/ListRegion';
 import { Warning } from '../../components/Warning';
 import { Form } from '../../components/FormAddRegion';
 import { GeoAreaIcon } from '../../icons';
-import { getRegion } from '../../services';
+import { addRegion, getRecord, getRegion } from '../../services';
 
 const Home: React.FC = () => {
     const [markers, setMarkers] = useState<TypeCar[]>([]);
@@ -33,6 +34,10 @@ const Home: React.FC = () => {
     const [regions, setRegions] = useState<Region[]>([]);
     const [disabled, setDisabled] = useState(true);
     const [newRegion, setNewRegion] = useState<Region>();
+    const [messageApi, contextHolder] = message.useMessage();
+    const [records, setRecords] = useState<Record[]>([]);
+    const [isRefresh, setIsRefresh] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const showModal = () => {
         setIsModalOpen(true);
@@ -40,15 +45,33 @@ const Home: React.FC = () => {
 
     const handleReload = async () => {
         try {
-            const [region] = await Promise.all([getRegion()]);
+            setIsRefresh(true);
+            const [region, record] = await Promise.all([
+                getRegion(),
+                getRecord(),
+            ]);
+            setIsRefresh(false);
+            setRecords(record);
             setRegions(region);
         } catch (error) {}
     };
 
     const handleOk = () => {
-        console.log(newRegion);
-
-        setIsModalOpen(false);
+        if (newRegion) {
+            const fetch = async () => {
+                setLoading(true);
+                const res = await addRegion(newRegion);
+                handleReload();
+                console.log(res);
+                messageApi.open({
+                    type: 'success',
+                    content: 'Thêm vùng thành công',
+                });
+                setLoading(false);
+                setIsModalOpen(false);
+            };
+            fetch();
+        }
     };
 
     const handleCancel = () => {
@@ -94,13 +117,22 @@ const Home: React.FC = () => {
 
     useEffect(() => {
         const fetch = async () => {
+            const res = await getListVehicles();
+            setMarkers(res?.data);
+        };
+
+        fetch();
+    }, []);
+
+    useEffect(() => {
+        const fetch = async () => {
             try {
-                const [res, regionRes] = await Promise.all([
-                    getListVehicles(),
+                const [regionRes, recordRes] = await Promise.all([
                     getRegion(),
+                    getRecord(),
                 ]);
                 setRegions(regionRes);
-                setMarkers(res?.data);
+                setRecords(recordRes);
             } catch (error) {}
         };
 
@@ -109,6 +141,7 @@ const Home: React.FC = () => {
 
     return (
         <div className="relative h-full">
+            {contextHolder}
             {markers?.length > 0 && (
                 <div className="h-full">
                     <div className="h-full">
@@ -180,7 +213,7 @@ const Home: React.FC = () => {
                     <Space>
                         <Button
                             type="primary"
-                            onClick={onClose}
+                            onClick={handleReload}
                             icon={<ReloadOutlined />}
                         />
                         <Button
@@ -190,11 +223,17 @@ const Home: React.FC = () => {
                         >
                             Thêm mới
                         </Button>
+                        <Button
+                            type="text"
+                            onClick={onClose}
+                            icon={<CloseOutlined />}
+                        />
                     </Space>
                 }
             >
                 <Tabs
                     defaultActiveKey="1"
+                    centered
                     items={[
                         {
                             key: '1',
@@ -203,19 +242,26 @@ const Home: React.FC = () => {
                                 <ListRegion
                                     regions={regions}
                                     reload={handleReload}
+                                    isRefresh={isRefresh}
                                 />
                             ),
                         },
                         {
                             key: '2',
                             label: 'Cảnh báo',
-                            children: <Warning />,
+                            children: (
+                                <Warning
+                                    records={records}
+                                    isRefresh={isRefresh}
+                                />
+                            ),
                         },
                     ]}
                     // onChange={onChange}
                 />
             </Drawer>
             <Modal
+                destroyOnClose={true}
                 centered
                 title="Thêm vùng"
                 open={isModalOpen}
@@ -230,6 +276,7 @@ const Home: React.FC = () => {
                     markers={markers}
                     setDisable={setDisabled}
                     setNewRegion={setNewRegion}
+                    pendingAddRegion={loading}
                 />
             </Modal>
         </div>

@@ -1,2 +1,2 @@
 export { getListVehicles } from './carService';
-export { getRegion } from './userService';
+export { getRegion, addRegion, getRecord } from './userService';

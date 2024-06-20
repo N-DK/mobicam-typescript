@@ -26,3 +26,119 @@ export const getDivIcon = (dir: number, state: string) => {
         className: '',
     });
 };
+
+export const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${hours}:${minutes} ${day}/${month}`;
+};
+
+export const localLangue = {
+    draw: {
+        toolbar: {
+            actions: {
+                title: 'Hủy bỏ vẽ',
+                text: 'Hủy',
+            },
+            finish: {
+                title: 'Hoàn thành vẽ',
+                text: 'Hoàn thành',
+            },
+            undo: {
+                title: 'Xóa điểm cuối cùng đã vẽ',
+                text: 'Xóa điểm cuối',
+            },
+            buttons: {
+                polyline: 'Vẽ đường thẳng',
+                polygon: 'Vẽ đa giác',
+                rectangle: 'Vẽ hình chữ nhật',
+                circle: 'Vẽ hình tròn',
+                marker: 'Vẽ điểm',
+                circlemarker: 'Vẽ điểm tròn',
+            },
+        },
+        handlers: {
+            circle: {
+                tooltip: {
+                    start: 'Nhấp và kéo để vẽ hình tròn.',
+                },
+                radius: 'Bán kính',
+            },
+            circlemarker: {
+                tooltip: {
+                    start: 'Nhấp vào bản đồ để đặt điểm tròn.',
+                },
+            },
+            marker: {
+                tooltip: {
+                    start: 'Nhấp vào bản đồ để đặt điểm.',
+                },
+            },
+            polygon: {
+                tooltip: {
+                    start: 'Nhấp để bắt đầu vẽ hình dạng.',
+                    cont: 'Nhấp để tiếp tục vẽ hình dạng.',
+                    end: 'Nhấp vào điểm đầu tiên để hoàn thành hình dạng.',
+                },
+            },
+            polyline: {
+                error: '<strong>Lỗi:</strong> các cạnh hình dạng không được cắt nhau!',
+                tooltip: {
+                    start: 'Nhấp để bắt đầu vẽ đường thẳng.',
+                    cont: 'Nhấp để tiếp tục vẽ đường thẳng.',
+                    end: 'Nhấp vào điểm cuối cùng để hoàn thành đường thẳng.',
+                },
+            },
+            rectangle: {
+                tooltip: {
+                    start: 'Nhấp và kéo để vẽ hình chữ nhật.',
+                },
+            },
+            simpleshape: {
+                tooltip: {
+                    end: 'Nhả chuột để hoàn thành vẽ.',
+                },
+            },
+        },
+    },
+    edit: {
+        toolbar: {
+            actions: {
+                save: {
+                    title: 'Lưu thay đổi',
+                    text: 'Lưu',
+                },
+                cancel: {
+                    title: 'Hủy bỏ chỉnh sửa, bỏ qua tất cả các thay đổi',
+                    text: 'Hủy',
+                },
+                clearAll: {
+                    title: 'Xóa tất cả các lớp',
+                    text: 'Xóa tất cả',
+                },
+            },
+            buttons: {
+                edit: 'Chỉnh sửa lớp',
+                editDisabled: 'Không có lớp nào để chỉnh sửa',
+                remove: 'Xóa lớp',
+                removeDisabled: 'Không có lớp nào để xóa',
+            },
+        },
+        handlers: {
+            edit: {
+                tooltip: {
+                    text: 'Kéo điểm hoặc dấu để chỉnh sửa đối tượng.',
+                    subtext: 'Nhấp hủy để bỏ qua thay đổi.',
+                },
+            },
+            remove: {
+                tooltip: {
+                    text: 'Nhấp vào đối tượng để xóa.',
+                },
+            },
+        },
+    },
+};

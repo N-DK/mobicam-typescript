@@ -1,7 +1,7 @@
 export type Region = {
     _id?: string;
     type: string;
-    bounds: number[][];
+    bounds?: number[][];
     color?: string;
     name: string;
     isInWarning: number;
@@ -9,4 +9,6 @@ export type Region = {
     vehicles?: string[];
     note?: string;
     isDelete?: boolean;
+    center?: number[];
+    radius?: number;
 };

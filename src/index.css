@@ -32,6 +32,36 @@
     display: none;
 }
 
+.overflow-overlay {
+    overflow: overlay;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #fafafa;
+    border: none;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    background-color: #fafafa;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #e6e6e6;
+}
+
+.ant-drawer .ant-drawer-body {
+    /* Ẩn thanh cuộn ngang và dọc */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+
+    /* WebKit-based browsers */
+    &::-webkit-scrollbar {
+        width: 0; /* Ẩn thanh cuộn ngang */
+        height: 0; /* Ẩn thanh cuộn dọc */
+    }
+}
+
 .ant-tabs-nav {
     width: 100% !important;
 }
