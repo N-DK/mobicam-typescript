@@ -1,12 +1,15 @@
-import { Avatar, Empty, List, Spin } from 'antd';
+import { Empty, List, Spin } from 'antd';
 import { Record } from '../../types';
 import { LoadingOutlined } from '@ant-design/icons';
 import { formatDate } from '../../utils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClock } from '@fortawesome/free-regular-svg-icons';
 
-const Warning: React.FC<{ records: Record[]; isRefresh: boolean }> = ({
-    records,
-    isRefresh,
-}) => {
+const Warning: React.FC<{
+    records: Record[];
+    isRefresh: boolean;
+    setCarActive: React.Dispatch<React.SetStateAction<string | undefined>>;
+}> = ({ records, isRefresh, setCarActive }) => {
     return (
         <div>
             <div>
@@ -21,25 +24,41 @@ const Warning: React.FC<{ records: Record[]; isRefresh: boolean }> = ({
                     <List
                         itemLayout="horizontal"
                         dataSource={records}
-                        renderItem={(item, index) => (
-                            <List.Item>
+                        renderItem={(item) => (
+                            <List.Item
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => setCarActive(item.vid)}
+                            >
                                 <List.Item.Meta
                                     avatar={
-                                        <Avatar
-                                            src={`https://api.dicebear.com/7.x/miniavs/svg?seed=${index}`}
+                                        <img
+                                            src={`https://cdn3.iconfinder.com/data/icons/parking-signs/226/parking-area-01${
+                                                item.in_time !== null ? 1 : 2
+                                            }-512.png`}
+                                            width={70}
+                                            className="object-center object-contain"
                                         />
                                     }
                                     title={`Xe ${item.vid} đi ${
                                         item.in_time !== null ? 'vào' : 'ra'
-                                    } vùng ${item.region_name}`}
-                                    description={`Thời gian ${
-                                        item.in_time !== null
-                                            ? `vào ${formatDate(item.in_time)}`
-                                            : `ra ${
-                                                  item.out_time &&
-                                                  formatDate(item.out_time)
-                                              }`
-                                    }`}
+                                    } ${item.region_name}`}
+                                    description={
+                                        <div>
+                                            <FontAwesomeIcon
+                                                icon={faClock}
+                                                className="mr-2"
+                                            />
+                                            Thời gian
+                                            {item.in_time !== null
+                                                ? ` vào ${formatDate(
+                                                      item.in_time,
+                                                  )}`
+                                                : ` ra ${
+                                                      item.out_time &&
+                                                      formatDate(item.out_time)
+                                                  }`}
+                                        </div>
+                                    }
                                 />
                             </List.Item>
                         )}

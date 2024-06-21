@@ -76,3 +76,57 @@
     display: unset !important;
     width: 100% !important;
 }
+
+.ripple {
+    height: 70px;
+    position: absolute;
+    width: 70px;
+}
+
+.ripple > div {
+    animation: growAndFade 3s infinite ease-out;
+    background-color: #ff4d4f;
+    border-radius: 50%;
+    height: 100%;
+    opacity: 1;
+    position: absolute;
+    width: 100%;
+    border: 6px solid #e31300;
+}
+
+/* .ripple .circle1 {
+    animation-delay: 1s;
+}
+
+.ripple .circle2 {
+    animation-delay: 2s;
+}
+.ripple .circle3 {
+    animation-delay: 3s;
+} */
+
+.ant-list-item {
+    transition: 0.2s all ease-in-out;
+}
+.ant-list-item:hover {
+    box-shadow: 0 0 4px #eee;
+    background-color: #dddddd6e;
+}
+
+.leaflet-div-icon {
+    border-radius: 50%;
+    background: #fa8c06;
+    border: 1px solid #255dec;
+}
+
+@keyframes growAndFade {
+    0% {
+        opacity: 1;
+        transform: scale(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+}

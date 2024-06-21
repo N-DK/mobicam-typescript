@@ -2,7 +2,7 @@ export type Region = {
     _id?: string;
     type: string;
     bounds?: number[][];
-    color?: string;
+    color: string;
     name: string;
     isInWarning: number;
     isOutWarning: number;

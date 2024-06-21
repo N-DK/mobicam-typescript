@@ -25,7 +25,7 @@ import { ListRegion } from '../../components/ListRegion';
 import { Warning } from '../../components/Warning';
 import { Form } from '../../components/FormAddRegion';
 import { GeoAreaIcon } from '../../icons';
-import { addRegion, getRecord, getRegion } from '../../services';
+import { addRegion, getRecord, getRegion, updateRegion } from '../../services';
 
 const Home: React.FC = () => {
     const [markers, setMarkers] = useState<TypeCar[]>([]);
@@ -38,8 +38,11 @@ const Home: React.FC = () => {
     const [records, setRecords] = useState<Record[]>([]);
     const [isRefresh, setIsRefresh] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [carActive, setCarActive] = useState<string>();
+    const [updateData, setUpdateData] = useState<Region>();
 
     const showModal = () => {
+        if (updateData) setUpdateData(undefined);
         setIsModalOpen(true);
     };
 
@@ -58,14 +61,19 @@ const Home: React.FC = () => {
 
     const handleOk = () => {
         if (newRegion) {
+            if (updateData) newRegion._id = updateData._id;
             const fetch = async () => {
                 setLoading(true);
-                const res = await addRegion(newRegion);
+                const res = updateData
+                    ? await updateRegion(newRegion)
+                    : await addRegion(newRegion);
                 handleReload();
                 console.log(res);
                 messageApi.open({
                     type: 'success',
-                    content: 'Thêm vùng thành công',
+                    content: updateData
+                        ? 'Lưu vùng thành công'
+                        : 'Thêm vùng thành công',
                 });
                 setLoading(false);
                 setIsModalOpen(false);
@@ -84,6 +92,11 @@ const Home: React.FC = () => {
 
     const onClose = () => {
         setOpenPolygon(false);
+    };
+
+    const handleOpenEdit = (region: Region) => {
+        setUpdateData(region);
+        setIsModalOpen(true);
     };
 
     // const onChange = (key: string) => {
@@ -151,7 +164,11 @@ const Home: React.FC = () => {
                                 iconCreateFunction={createClusterCustomIcon}
                             >
                                 {markers?.map((marker, index) => (
-                                    <Car key={index} data={marker} />
+                                    <Car
+                                        active={carActive === marker.name_Vid}
+                                        key={index}
+                                        data={marker}
+                                    />
                                 ))}
                             </MarkerClusterGroup>
                         </MapWrapper>
@@ -240,6 +257,7 @@ const Home: React.FC = () => {
                             label: 'Danh sách vùng',
                             children: (
                                 <ListRegion
+                                    openModalEdit={handleOpenEdit}
                                     regions={regions}
                                     reload={handleReload}
                                     isRefresh={isRefresh}
@@ -253,6 +271,7 @@ const Home: React.FC = () => {
                                 <Warning
                                     records={records}
                                     isRefresh={isRefresh}
+                                    setCarActive={setCarActive}
                                 />
                             ),
                         },
@@ -267,9 +286,12 @@ const Home: React.FC = () => {
                 open={isModalOpen}
                 onOk={handleOk}
                 onCancel={handleCancel}
-                okText="Thêm"
+                okText={updateData ? 'Lưu' : 'Thêm'}
                 cancelText="Hủy"
-                okButtonProps={{ icon: <SaveOutlined />, disabled: disabled }}
+                okButtonProps={{
+                    icon: <SaveOutlined />,
+                    disabled: disabled || loading,
+                }}
                 width={1200}
             >
                 <Form
@@ -277,6 +299,7 @@ const Home: React.FC = () => {
                     setDisable={setDisabled}
                     setNewRegion={setNewRegion}
                     pendingAddRegion={loading}
+                    updateData={updateData}
                 />
             </Modal>
         </div>

@@ -13,12 +13,22 @@ import { Car } from '../Car';
 import { Region, Car as TypeCar } from '../../types';
 import { createClusterCustomIcon, localLangue } from '../../utils';
 import TextArea from 'antd/es/input/TextArea';
-import { FeatureGroup } from 'react-leaflet';
+import {
+    FeatureGroup,
+    Rectangle,
+    Polygon,
+    Circle,
+    useMap,
+} from 'react-leaflet';
 import { EditControl } from 'react-leaflet-draw';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useEffect, useRef, useState } from 'react';
 import { getListVehicles } from '../../services/carService';
-import { FeatureGroup as LeafletFeatureGroup } from 'leaflet';
+import {
+    LatLngBoundsExpression,
+    LatLngExpression,
+    FeatureGroup as LeafletFeatureGroup,
+} from 'leaflet';
 import L from 'leaflet';
 
 Object.assign(L.drawLocal, localLangue);
@@ -61,18 +71,35 @@ type FormType = {
     setDisable: React.Dispatch<React.SetStateAction<boolean>>;
     setNewRegion: React.Dispatch<React.SetStateAction<Region | undefined>>;
     pendingAddRegion: boolean;
+    updateData?: Region;
 };
+
+type LayerType = {
+    type: string;
+    bounds?: number[][];
+    id?: number;
+    center?: number[];
+    radius?: number;
+};
+
 const rectangleOption = {
     showArea: false,
 };
 const { SHOW_CHILD } = TreeSelect;
 
-type LayerType = {
-    type: string;
-    bounds?: number[][];
-    id: number;
-    center?: number[];
-    radius?: number;
+const ZoomMap: any = ({ updateData }: { updateData: Region | undefined }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (updateData?.bounds) {
+            map.setView(
+                [updateData.bounds[0][0], updateData.bounds[0][1]],
+                updateData.type === 'rectangle' ? 17 : 14,
+            );
+        } else if (updateData?.center) {
+            map.setView(updateData.center as LatLngExpression, 16);
+        }
+    }, [updateData, map]);
 };
 
 const FormAddRegion: React.FC<FormType> = ({
@@ -80,23 +107,46 @@ const FormAddRegion: React.FC<FormType> = ({
     setDisable,
     setNewRegion,
     pendingAddRegion,
+    updateData,
 }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [showVehicle, setShowVehicle] = useState(true);
     const [listVehicles, setListVehicles] = useState<TypeCar[]>();
-    const [name, setName] = useState<string>('');
-    const [layer, setLayer] = useState<LayerType>();
-    const [vehicles, setVehicles] = useState<string[]>([]);
-    const [color, setColor] = useState<string>('#255DEC');
-    const [isInWarning, setIsInWarning] = useState(1);
-    const [isOutWarning, setIsOutWarning] = useState(1);
-    const [note, setNote] = useState('');
+    const [name, setName] = useState<string>(updateData ? updateData.name : '');
+    const [layer, setLayer] = useState<LayerType>(
+        updateData?.bounds
+            ? {
+                  type: updateData?.type || '',
+                  bounds: updateData?.bounds,
+              }
+            : {
+                  type: updateData?.type || '',
+                  center: updateData?.center,
+                  radius: updateData?.radius,
+              },
+    );
+    const [vehicles, setVehicles] = useState<string[]>(
+        updateData && updateData.vehicles ? updateData.vehicles : [],
+    );
+    const [color, setColor] = useState<string>(
+        updateData ? updateData.color : '#255DEC',
+    );
+    const [isInWarning, setIsInWarning] = useState<number>(
+        updateData ? updateData.isInWarning : 1,
+    );
+    const [isOutWarning, setIsOutWarning] = useState<number>(
+        updateData ? updateData.isOutWarning : 1,
+    );
+    const [note, setNote] = useState(updateData ? updateData.note : '');
     const featureGroupRef = useRef<LeafletFeatureGroup>(null);
     const [featureGroupComponent, setFeatureGroupComponent] =
         useState<React.ReactNode>();
     const handleShowVehicle = (checked: boolean) => {
         setShowVehicle(checked);
     };
+    const drawItemRef = useRef<any>(null);
+    const previousLeafletIdRef = useRef(null);
+    const [renderedLayer, setRenderedLayer] = useState<React.ReactNode>();
 
     useEffect(() => {
         const updateNewRegion = () => {
@@ -201,6 +251,57 @@ const FormAddRegion: React.FC<FormType> = ({
     }, []);
 
     useEffect(() => {
+        if (drawItemRef.current) {
+            const leafletId = drawItemRef.current._leaflet_id;
+            if (leafletId !== previousLeafletIdRef.current) {
+                previousLeafletIdRef.current = leafletId;
+                setLayer((prev) => ({ ...prev, id: leafletId }));
+            }
+        }
+    }, [listVehicles]);
+
+    useEffect(() => {
+        if (updateData) {
+            switch (updateData.type) {
+                case 'rectangle': {
+                    setRenderedLayer(
+                        <Rectangle
+                            ref={drawItemRef}
+                            bounds={updateData.bounds as LatLngBoundsExpression}
+                            color={updateData.color}
+                        />,
+                    );
+                    break;
+                }
+                case 'polygon': {
+                    setRenderedLayer(
+                        <Polygon
+                            ref={drawItemRef}
+                            positions={updateData.bounds as any}
+                            color={updateData.color}
+                        />,
+                    );
+                    break;
+                }
+                case 'circle': {
+                    setRenderedLayer(
+                        <Circle
+                            ref={drawItemRef}
+                            center={updateData.center as LatLngExpression}
+                            radius={updateData.radius as number}
+                            color={updateData.color}
+                        />,
+                    );
+                    break;
+                }
+                default:
+                    setRenderedLayer(null);
+                    break;
+            }
+        }
+    }, [updateData]);
+
+    useEffect(() => {
         setFeatureGroupComponent(
             <FeatureGroup ref={featureGroupRef}>
                 <EditControl
@@ -232,9 +333,10 @@ const FormAddRegion: React.FC<FormType> = ({
                     onEditStart={() => setDisable(true)}
                     onEditStop={() => setDisable(!(name !== ''))}
                 />
+                {renderedLayer}
             </FeatureGroup>,
         );
-    }, [color, name]);
+    }, [color, name, renderedLayer]);
 
     useEffect(() => {
         const fetch = async () => {
@@ -261,6 +363,7 @@ const FormAddRegion: React.FC<FormType> = ({
                                         message: 'Tên vùng không được để trống',
                                     },
                                 ]}
+                                initialValue={name}
                             >
                                 <Input
                                     value={name}
@@ -286,13 +389,17 @@ const FormAddRegion: React.FC<FormType> = ({
                                             title: 'Tất cả',
                                             value: '0-0',
                                             key: '0-0',
-                                            children: listVehicles?.map(
-                                                (v) => ({
-                                                    title: `${v.name_Vid} (${v.name_Vid}) (${v.key})`,
-                                                    value: `${v.name_Vid}`,
-                                                    key: `${v.name_Vid}`,
-                                                }),
-                                            ),
+                                            children: listVehicles
+                                                ? listVehicles?.map((v) => ({
+                                                      title: `${v.name_Vid} (${v.name_Vid}) (${v.key})`,
+                                                      value: `${v.name_Vid}`,
+                                                      key: `${v.name_Vid}`,
+                                                  }))
+                                                : markers?.map((v) => ({
+                                                      title: `${v.name_Vid} (${v.name_Vid}) (${v.key})`,
+                                                      value: `${v.name_Vid}`,
+                                                      key: `${v.name_Vid}`,
+                                                  })),
                                         },
                                     ]}
                                     value={vehicles}
@@ -310,7 +417,7 @@ const FormAddRegion: React.FC<FormType> = ({
                                                 e.target.checked ? 1 : 0,
                                             )
                                         }
-                                        value={isInWarning === 1}
+                                        checked={isInWarning === 1}
                                         defaultChecked={isInWarning === 1}
                                     >
                                         Cảnh báo đi vào vùng
@@ -357,6 +464,7 @@ const FormAddRegion: React.FC<FormType> = ({
                                         ))}
                                     </MarkerClusterGroup>
                                 )}
+                                <ZoomMap updateData={updateData} />
                             </MapWrapper>
                         ) : (
                             <div className="bg-[#8b8b8b] bg-opacity-45 h-full flex justify-center items-center">

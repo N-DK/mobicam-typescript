@@ -1,13 +1,22 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Car as TypeCar } from '../../types';
 import { getDivIcon } from '../../utils';
-import { Marker, Popup } from 'react-leaflet';
+import { Marker, Popup, useMap } from 'react-leaflet';
 
 type CarProps = {
     data: TypeCar;
+    active?: boolean;
 };
 
-const Car: React.FC<CarProps> = React.memo(({ data }) => {
+const Car: React.FC<CarProps> = React.memo(({ data, active }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (active) {
+            map.setView([data.lat, data.lng], 18);
+        }
+    }, [active, map]);
+
     const icon = useMemo(() => {
         return getDivIcon(
             data?.dir,
@@ -16,8 +25,9 @@ const Car: React.FC<CarProps> = React.memo(({ data }) => {
                     ? '#e74b3c'
                     : '#4397c9'
                 : '#00aa9a',
+            active !== undefined ? active : false,
         );
-    }, [data?.dir, data?.speed, data?.accIO]);
+    }, [data?.dir, data?.speed, data?.accIO, active]);
 
     return (
         data && (
