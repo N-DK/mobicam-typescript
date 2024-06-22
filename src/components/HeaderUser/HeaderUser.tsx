@@ -18,11 +18,11 @@ const HeaderUser: React.FC = () => {
                         <FontAwesomeIcon className="text-[8px]" icon={faPlus} />
                     </span>
                 </div>
-                <Button type="text" className="rounded-full">
+                <Button type="text" className="rounded-full px-[6px]">
                     <div className="rounded-full flex justify-center items-center w-6 h-6 bg-[#e6effd]">
                         <UserOutlined />
                     </div>
-                    <span className="uppercase font-medium">ahamove</span>
+                    <span className="uppercase font-medium">midvn</span>
                     <FontAwesomeIcon icon={faChevronDown} />
                 </Button>
             </div>

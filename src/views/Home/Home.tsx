@@ -104,6 +104,26 @@ const Home: React.FC = () => {
     // };
 
     useEffect(() => {
+        const socket = io('http://localhost:3000');
+
+        socket.on('connect', () => {
+            console.log('Connected to server node server');
+        });
+
+        socket.on('warning', (data) => {
+            socket.emit('send-data', data);
+        });
+
+        socket.on('received', (data) => {
+            setRecords(data);
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, []);
+
+    useEffect(() => {
         const socket = io('https://checkapp.midvietnam.com', {
             transportOptions: {
                 polling: {
@@ -116,7 +136,7 @@ const Home: React.FC = () => {
         });
 
         socket.on('connect', () => {
-            console.log('Connected to server');
+            console.log('Connected to server midvietnam');
         });
 
         socket.on('statusVid', (data) => {
